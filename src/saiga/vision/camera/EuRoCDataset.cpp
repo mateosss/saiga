@@ -121,18 +121,38 @@ int EuRoCDataset::LoadMetaData()
         Vec5 kparamsfull = Vec5::Zero();
         kparamsfull.head<4>() = kparams;
         intrinsics.model.K.coeffs(kparamsfull);
-        auto res               = readYamlMatrix<ivec2>(config["resolution"]);
-        intrinsics.imageSize.w = res(0);
-        intrinsics.imageSize.h = res(1);
-        // 4 parameter rad-tan model
-        Vec4 d                  = readYamlMatrix<Vec4>(config["distortion_coefficients"]);
-        intrinsics.model.dis.k1 = d(0);
-        intrinsics.model.dis.k2 = d(1);
-        intrinsics.model.dis.p1 = d(2);
-        intrinsics.model.dis.p2 = d(3);
-        Mat4 m                  = readYamlMatrix<Mat4>(config["T_BS"]["data"]);
-        extrinsics_cam0         = SE3::fitToSE3(m);
-        cam0_images             = loadTimestapDataCSV(params.dir + "/cam0/data.csv");
+        auto res                     = readYamlMatrix<ivec2>(config["resolution"]);
+        intrinsics.imageSize.w       = res(0);
+        intrinsics.imageSize.h       = res(1);
+        std::string distortion_model = config["distortion_model"].as<std::string>();
+        if (distortion_model == "radial-tangential")
+        {
+            Vec4 d                  = readYamlMatrix<Vec4>(config["distortion_coefficients"]);
+            intrinsics.model.dis.k1 = d(0);
+            intrinsics.model.dis.k2 = d(1);
+            intrinsics.model.dis.p1 = d(2);
+            intrinsics.model.dis.p2 = d(3);
+        }
+        else if (distortion_model == "radial-tangential8")
+        {
+            Vec8 d                  = readYamlMatrix<Vec8>(config["distortion_coefficients"]);
+            intrinsics.model.dis.k1 = d(0);
+            intrinsics.model.dis.k2 = d(1);
+            intrinsics.model.dis.p1 = d(2);
+            intrinsics.model.dis.p2 = d(3);
+            intrinsics.model.dis.k3 = d(4);
+            intrinsics.model.dis.k4 = d(5);
+            intrinsics.model.dis.k5 = d(6);
+            intrinsics.model.dis.k6 = d(7);
+        }
+        else
+        {
+            SAIGA_EXIT_ERROR("Unknown distortion model: " + distortion_model);
+        }
+
+        Mat4 m          = readYamlMatrix<Mat4>(config["T_BS"]["data"]);
+        extrinsics_cam0 = SE3::fitToSE3(m);
+        cam0_images     = loadTimestapDataCSV(params.dir + "/cam0/data.csv");
     }
 
     {
@@ -150,18 +170,33 @@ int EuRoCDataset::LoadMetaData()
         /// intrinsics.rightModel.K.coeffs(readYamlMatrix<Vec5>(config["intrinsics"]));
 
 
-        auto res                    = readYamlMatrix<ivec2>(config["resolution"]);
-        intrinsics.rightImageSize.w = res(0);
-        intrinsics.rightImageSize.h = res(1);
-        // 4 parameter rad-tan model
-        Vec4 d                       = readYamlMatrix<Vec4>(config["distortion_coefficients"]);
-        intrinsics.rightModel.dis.k1 = d(0);
-        intrinsics.rightModel.dis.k2 = d(1);
-        intrinsics.rightModel.dis.p1 = d(2);
-        intrinsics.rightModel.dis.p2 = d(3);
-        Mat4 m                       = readYamlMatrix<Mat4>(config["T_BS"]["data"]);
-        extrinsics_cam1              = SE3::fitToSE3(m);
-        cam1_images                  = loadTimestapDataCSV(params.dir + "/cam1/data.csv");
+        auto res                     = readYamlMatrix<ivec2>(config["resolution"]);
+        intrinsics.rightImageSize.w  = res(0);
+        intrinsics.rightImageSize.h  = res(1);
+        std::string distortion_model = config["distortion_model"].as<std::string>();
+        if (distortion_model == "radial-tangential")
+        {
+            Vec4 d                       = readYamlMatrix<Vec4>(config["distortion_coefficients"]);
+            intrinsics.rightModel.dis.k1 = d(0);
+            intrinsics.rightModel.dis.k2 = d(1);
+            intrinsics.rightModel.dis.p1 = d(2);
+            intrinsics.rightModel.dis.p2 = d(3);
+        }
+        else if (distortion_model == "radial-tangential8")
+        {
+            Vec8 d                       = readYamlMatrix<Vec8>(config["distortion_coefficients"]);
+            intrinsics.rightModel.dis.k1 = d(0);
+            intrinsics.rightModel.dis.k2 = d(1);
+            intrinsics.rightModel.dis.p1 = d(2);
+            intrinsics.rightModel.dis.p2 = d(3);
+            intrinsics.rightModel.dis.k3 = d(4);
+            intrinsics.rightModel.dis.k4 = d(5);
+            intrinsics.rightModel.dis.k5 = d(6);
+            intrinsics.rightModel.dis.k6 = d(7);
+        }
+        Mat4 m          = readYamlMatrix<Mat4>(config["T_BS"]["data"]);
+        extrinsics_cam1 = SE3::fitToSE3(m);
+        cam1_images     = loadTimestapDataCSV(params.dir + "/cam1/data.csv");
     }
 
     {
@@ -580,8 +615,6 @@ void EuRoCDataset::FindSequence()
             }
         }
 
-        SAIGA_ASSERT(found == 1);
-        SAIGA_ASSERT(sequence != UNKNOWN);
 
         std::cout << "Extracted Sequence from file name: " << DatasetNames()[int(sequence)] << std::endl;
     }
