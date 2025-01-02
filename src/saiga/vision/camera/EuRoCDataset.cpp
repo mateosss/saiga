@@ -643,8 +643,13 @@ void EuRoCDataset::FindSequence()
 
 
 
+#if 0 // Enable for using the computed offsets mentioned in the paper
     params.ground_truth_time_offset = -offsets[int(sequence)].first;
     use_raw_gt_data                 = offsets[int(sequence)].second;
+#else
+    params.ground_truth_time_offset = 0.0;
+    use_raw_gt_data                 = false;
+#endif
 
     std::cout << "Use Raw GT data: " << use_raw_gt_data << std::endl;
     std::cout << "Ground truth offset: " << params.ground_truth_time_offset << std::endl;

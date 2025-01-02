@@ -54,6 +54,71 @@ void Scene::InitialAlignment()
     }
 }
 
+void Scene::InitialAlignmentUmeyama()
+{
+    // Based on Basalt's implementation:
+    // https://gitlab.com/VladyslavUsenko/basalt/-/blob/47b063e64fa7dd56ac04eb2d579c5cb5e72c743e/src/vi_estimator/vio_estimator.cpp#L81-175
+
+    std::vector<Eigen::Vector3d> est_associations;
+    std::vector<Eigen::Vector3d> gt_associations;
+    for (auto& v : vertices)
+    {
+        est_associations.emplace_back((v.estimate * extrinsics).translation());
+        gt_associations.emplace_back(v.ground_truth.translation());
+    }
+
+    int num_kfs = est_associations.size();
+
+    Eigen::Matrix<double, 3, Eigen::Dynamic> gt, est;
+    gt.setZero(3, num_kfs);
+    est.setZero(3, num_kfs);
+
+    for (size_t i = 0; i < est_associations.size(); i++)
+    {
+        gt.col(i)  = gt_associations[i];
+        est.col(i) = est_associations[i];
+    }
+
+    Eigen::Vector3d mean_gt  = gt.rowwise().mean();
+    Eigen::Vector3d mean_est = est.rowwise().mean();
+
+    gt.colwise() -= mean_gt;
+    est.colwise() -= mean_est;
+
+    Eigen::Matrix3d cov = gt * est.transpose();
+
+    Eigen::JacobiSVD<Eigen::Matrix3d> svd(cov, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+    Eigen::Matrix3d S;
+    S.setIdentity();
+
+    if (svd.matrixU().determinant() * svd.matrixV().determinant() < 0) S(2, 2) = -1;
+
+    Eigen::Matrix3d rot_gt_est = svd.matrixU() * S * svd.matrixV().transpose();
+    Eigen::Vector3d trans      = mean_gt - rot_gt_est * mean_est;
+
+    Sophus::SE3d T_gt_est(rot_gt_est, trans);
+
+    transformation = T_gt_est;
+
+#if 0
+    // std::cout << ">>> [UME] transformation: " << transformation << " scale: " << scale << std::endl;
+    double error = 0;
+    for (size_t i = 0; i < est_associations.size(); i++)
+    {
+        est_associations[i] = T_gt_est * est_associations[i];
+        Eigen::Vector3d res = est_associations[i] - gt_associations[i];
+
+        error += res.transpose() * res;
+    }
+
+    error /= est_associations.size();
+    error = std::sqrt(error);
+    printf(">>> [UME] computed ATE: %f\n", error);
+
+#endif
+
+}
 #ifdef SAIGA_USE_CERES
 
 

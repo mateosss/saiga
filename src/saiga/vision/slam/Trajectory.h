@@ -80,6 +80,7 @@ struct SAIGA_VISION_API Scene
     bool optimize_extrinsics = false;
 
     void InitialAlignment();
+    void InitialAlignmentUmeyama();
 #ifdef SAIGA_USE_CERES
     void OptimizeCeres();
 #endif

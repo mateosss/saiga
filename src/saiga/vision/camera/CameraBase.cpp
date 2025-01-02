@@ -112,16 +112,17 @@ void DatasetCameraBase::saveGroundTruthTrajectory(const std::string& file)
 {
     std::ofstream strm(file);
     strm << std::setprecision(20);
+    strm << "#ts,px,py,pz,qw,qx,qy,qz" << std::endl;
     for (auto& f : frames)
     {
         if (f.groundTruth)
         {
-            double time = f.timeStamp;
-            SE3 pose    = f.groundTruth.value();
-            Vec3 t      = pose.translation();
-            Quat q      = pose.unit_quaternion();
-            strm << time << " " << t(0) << " " << t(1) << " " << t(2) << " " << q.x() << " " << q.y() << " " << q.z()
-                 << " " << q.w() << std::endl;
+            uint64_t time = uint64_t(f.timeStamp * 1e9);
+            SE3 pose      = f.groundTruth.value();
+            Vec3 t        = pose.translation();
+            Quat q        = pose.unit_quaternion();
+            strm << time << "," << t(0) << "," << t(1) << "," << t(2) << "," << q.w() << "," << q.x() << "," << q.y()
+                 << "," << q.z() << std::endl;
         }
     }
 }
