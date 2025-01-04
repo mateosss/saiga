@@ -639,7 +639,9 @@ void EuRoCDataset::FindSequence()
                                                // V2
                                                {-0.217, true},
                                                {-0.209, true},
-                                               {-0.200, true}};
+                                               {-0.200, true},
+                                               // UNKNOWN
+                                               {0, false}};
 
 
 
