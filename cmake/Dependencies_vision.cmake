@@ -43,7 +43,11 @@ endif ()
 # lib yaml for dataset loading
 if (SAIGA_WITH_YAMLCPP)
     find_package(yaml-cpp QUIET)
-    PackageHelperTarget(yaml-cpp::yaml-cpp YAML_FOUND)
+    PackageHelperTarget(yaml-cpp::yaml-cpp YAML_FOUND) # Newer yaml-cpp (e.g., Ubuntu 24.10)
+    if (NOT YAML_FOUND)
+        PackageHelperTarget(yaml-cpp YAML_FOUND) # Older yaml-cpp (e.g., Ubuntu 22.04)
+    endif ()
+    
     if (YAML_FOUND)
         SET(SAIGA_USE_YAML_CPP 1)
         SET(SAIGA_USE_YAML_CPP 1 PARENT_SCOPE)
