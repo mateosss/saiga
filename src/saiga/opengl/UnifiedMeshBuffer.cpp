@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2021 Darius Rückert
  * Licensed under the MIT License.
  * See LICENSE file for more information.
@@ -102,7 +102,7 @@ UnifiedMeshBuffer::~UnifiedMeshBuffer()
 void UnifiedMeshBuffer::Draw(int offset, int count)
 {
     //    if(count > num_triangles)  count = num_triangles;
-    SAIGA_ASSERT(num_elements > 0);
+    if (num_elements <= 0) return;
     count = std::min(count, num_elements - offset);
     SAIGA_ASSERT(offset < num_elements);
     SAIGA_ASSERT(offset + count <= num_elements);

@@ -44,6 +44,7 @@ void Scene::InitialAlignment()
     }
 
     SE3 relSe3 = ICP::pointToPointDirect(corrs, optimize_scale ? &scale : nullptr);
+    std::cout << "[ICP] relSe3: " << relSe3 << " scale: " << scale << std::endl;
 
 
     transformation = relSe3;
